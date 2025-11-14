@@ -1,32 +1,32 @@
-import { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
-import * as Location from 'expo-location';
+import { StatusBar } from "expo-status-bar";
+import { useState, useEffect } from "react";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import MapView, { Marker } from "react-native-maps";
+import * as Location from "expo-location";
 
 export default function App() {
   const [location, setLocation] = useState(null);
-  const [loading, setLoading] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   useEffect(() => {
-    getLocation()
-  }, [])
+    getLocation();
+  }, []);
 
-  async function getLocation() {
+  const getLocation = async () => {
     try {
       setLoading(true);
       setError(null);
-      let {status} = await Location.requestForegroundPermissionsAsync();
-      if (status != 'granted') {
-        setError('Permiso de ubicacion negado');
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setError("Permiso a acceder ubicación denegado");
         setLoading(false);
-        return
+        return;
       }
       let lastKnown = await Location.getLastKnownPositionAsync({});
       if (lastKnown) {
         setLocation(lastKnown.coords);
         setLoading(false);
-        return
+        return;
       }
       let currentLocation = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
@@ -35,21 +35,19 @@ export default function App() {
       setLocation(currentLocation.coords);
       setLoading(false);
     } catch (err) {
-      console.log('Error', err);
+      console.error("Error:", err);
       setError(err.message);
-      setLoading(false);
-    } finally {
       setLoading(false);
     }
   };
-  if (loading ) {
+  if (loading) {
     return (
-    <View style={styles.centerContainer}>
-      <Text style={styles.loadingText}>📍 Obteniendo ubcacion</Text>
-    </View>
-  );
+      <View style={styles.centerContainer}>
+        <Text style={styles.loadingText}>📍 Obteniendo ubicación...</Text>
+      </View>
+    );
   }
-  if (error || location) {
+  if (error || !location) {
     return (
       <View style={styles.centerContainer}>
         <Text style={styles.errorText}>{error || "Error desconocido"}</Text>
@@ -58,8 +56,8 @@ export default function App() {
         </TouchableOpacity>
       </View>
     );
-
   }
+
   return (
     <View style={styles.container}>
       <MapView
@@ -73,112 +71,113 @@ export default function App() {
         showsUserLocation={true}
         showsMyLocationButton={true}
       >
-        <Marker coordinate={{ latitude: location.latitude, longitude: location.longitude }} title='Tu ubicacion' description={`Lat: ${location.latitude.toFixed(6)}, Lon: ${location.longitude.toFixed(6)}`} pinColor='red'/> 
+        <Marker
+          coordinate={{
+            latitude: location.latitude,
+            longitude: location.longitude,
+          }}
+          title="Tu ubicación"
+          description={`Lat: ${location.latitude.toFixed(
+            6
+          )}, Lon: ${location.longitude.toFixed(6)}`}
+          pinColor="red"
+        />
       </MapView>
       <View style={styles.infoContainer}>
-        <Text style={styles.infoTitle}>📍 Tu ubicacion</Text>
-        <Text style={styles.infoTitle}>Lon: {location.longitude.toFixed(6)}</Text>
-        <Text style={styles.infoTitle}>Lat: {location.latitude.toFixed(6)}</Text>
+        <Text style={styles.infoTitle}>Tu ubicación 📍</Text>
+        <Text style={styles.infoText}>
+          {" "}
+          Latitud: {location.latitude.toFixed(6)}
+        </Text>
+        <Text style={styles.infoText}>
+          {" "}
+          Longitud: {location.longitude.toFixed(6)}
+        </Text>
       </View>
       <TouchableOpacity onPress={getLocation} style={styles.refreshButton}>
-        <Text style={styles.buttonText}>🔄️ Actualizar Ubicacion</Text>
+        <Text style={styles.buttonText}>Actualizar ubicación🔄</Text>
       </TouchableOpacity>
     </View>
-  )
+  );
 }
 
 const styles = StyleSheet.create({
-  // Pantalla principal
   container: {
     flex: 1,
-    backgroundColor: '#0F172A', // slate-900
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
   },
-
-  // Map
-  map: {
-    flex: 1,
-  },
-
-  // Panel de info sobre el mapa
-  infoContainer: {
-    position: 'absolute',
-    bottom: 90,
-    left: 16,
-    right: 16,
-    padding: 14,
-    borderRadius: 14,
-    backgroundColor: 'rgba(15, 23, 42, 0.85)', // fondo translúcido
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.08)',
-    shadowColor: '#000',
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 6,
-  },
-
-  infoTitle: {
-    color: '#E2E8F0', // slate-200
-    fontSize: 16,
-    lineHeight: 22,
-    marginBottom: 4,
-    fontWeight: '600',
-  },
-
-  // Botón flotante para refrescar
-  refreshButton: {
-    position: 'absolute',
-    bottom: 24,
-    left: 16,
-    right: 16,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#2563EB', // azul principal
-    shadowColor: '#000',
-    shadowOpacity: 0.35,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
-  },
-
-  // Estados: cargando o error
   centerContainer: {
     flex: 1,
-    backgroundColor: '#0F172A',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
   },
-
+  map: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+  },
   loadingText: {
-    color: '#E2E8F0',
     fontSize: 18,
-    fontWeight: '600',
-    textAlign: 'center',
+    color: "#333",
+    fontWeight: "600",
   },
-
   errorText: {
-    color: '#FCA5A5', // rojo suave
-    fontSize: 16,
-    textAlign: 'center',
-    marginBottom: 16,
-    lineHeight: 22,
+    fontSize: 18,
+    color: "red",
+    textAlign: "center",
+    marginBottom: 20,
   },
-
-  // Botón genérico, para la vista de error
+  infoContainer: {
+    position: "absolute",
+    top: 60,
+    left: 20,
+    right: 20,
+    backgroundColor: "rgba(255, 255, 255, 0.9)",
+    padding: 15,
+    borderRadius: 12,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  infoTitle: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#555",
+    marginVertical: 2,
+  },
+  infoText: {
+    fontSize: 14,
+    color: "#555",
+    marginVertical: 2,
+  },
+  refreshButton: {
+    position: "absolute",
+    bottom: 40,
+    alignSelf: "center",
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 25,
+    backgroundColor: "#3498db",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
   button: {
-    paddingVertical: 12,
-    paddingHorizontal: 18,
-    borderRadius: 10,
-    backgroundColor: '#334155', // slate-700
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 25,
   },
-
   buttonText: {
-    color: '#F8FAFC', // slate-50
-    fontSize: 16,
-    fontWeight: '600',
-  },
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
 });
-
